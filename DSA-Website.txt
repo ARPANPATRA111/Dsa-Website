@@ -2,3 +2,6 @@ Soo this is my dsa website project !!
 initially i plan to create a REST Api which will contain the data realted to the dsa question such as question, asnwer, dificulty_level, Image(if any), test_cases ...etc and using this api i will integrate a shaboard where everyday a new question will be displayed to the user along with a button called show_answer, which will show the optimised solution to question.
 for now thats the plan, in future i want to intigrate a text box where users can code adn test their answers to some extend.
 it could be a little tricky at first but surely possible, soo lets see how it goes.
+
+and yeah also i forgot to mention the tech-stack 
+ for now React-Vite-Supabase/FireBase-Vercel seems to be enough, will try to intigrate cloud in future.
