@@ -1,21 +1,27 @@
 import { useState, useEffect } from 'react';
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 import './App.css';
+import { PrismAsync as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+const ADMIN_CREDENTIALS = {
+  username: import.meta.env.VITE_ADMIN_USERNAME,
+  password: import.meta.env.VITE_ADMIN_PASS
+};
+
 function App() {
   const [session, setSession] = useState(null);
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
   
-  const [currentQuestion, setCurrentQuestion] = useState(null);
-  const [showAnswer, setShowAnswer] = useState(false);
+  const [currentQuestions, setCurrentQuestions] = useState([]);
+  const [showAnswer, setShowAnswer] = useState({});
   const [questions, setQuestions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -27,6 +33,7 @@ function App() {
     tags: [],
     solution: '',
     image_url: '',
+    reference_link: '',
     is_active: false
   });
   const [newTag, setNewTag] = useState('');
@@ -36,110 +43,67 @@ function App() {
   const [editingQuestion, setEditingQuestion] = useState(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const { data: activeQuestions, error: activeError } = await supabase
+          .from('questions')
+          .select('*')
+          .eq('is_active', true)
+          .order('created_at', { ascending: false });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
+        if (activeError) throw activeError;
 
-    return () => subscription.unsubscribe();
-  }, []);
+        setCurrentQuestions(activeQuestions || []);
 
-  useEffect(() => {
-    fetchQuestions();
-    fetchCurrentQuestion();
+        if (session) {
+          const { data: allQuestions, error: allError } = await supabase
+            .from('questions')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+          if (allError) throw allError;
+          setQuestions(allQuestions || []);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error.message);
+        setAdminError('Failed to load questions');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
   }, [session]);
 
-  const fetchQuestions = async () => {
-    if (!session) return;
-    
-    try {
-      setIsLoading(true);
-      const { data, error } = await supabase
-        .from('questions')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setQuestions(data || []);
-    } catch (error) {
-      console.error('Error fetching questions:', error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchCurrentQuestion = async () => {
-    try {
-      setIsLoading(true);
-      const { data, error } = await supabase
-        .from('questions')
-        .select('*')
-        .eq('is_active', true)
-        .single();
-
-      if (error && error.code !== 'PGRST116') throw error;
-      setCurrentQuestion(data || null);
-    } catch (error) {
-      console.error('Error fetching current question:', error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSignIn = async (e) => {
+  const handleAdminLogin = async (e) => {
     e.preventDefault();
     setAuthError(null);
     
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
+      if (username !== ADMIN_CREDENTIALS.username || password !== ADMIN_CREDENTIALS.password) {
+        throw new Error('Invalid admin credentials');
+      }
+      
+      setSession({ isAdmin: true });
       setIsLoginModalOpen(false);
-      setEmail('');
+      setUsername('');
       setPassword('');
     } catch (error) {
       setAuthError(error.message);
     }
   };
 
-  const handleSignUp = async (e) => {
-    e.preventDefault();
-    setAuthError(null);
-    
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-      setAdminSuccess('Sign up successful! Please check your email for confirmation.');
-      setIsSignupModalOpen(false);
-      setEmail('');
-      setPassword('');
-    } catch (error) {
-      setAuthError(error.message);
-    }
+  const handleSignOut = () => {
+    setSession(null);
+    setIsAdminPanelOpen(false);
   };
 
-  const handleSignOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      setIsAdminPanelOpen(false);
-    } catch (error) {
-      console.error('Error signing out:', error.message);
-    }
-  };
-
-  const toggleAnswer = () => {
-    setShowAnswer(!showAnswer);
+  const toggleAnswer = (questionId) => {
+    setShowAnswer(prev => ({
+      ...prev,
+      [questionId]: !prev[questionId]
+    }));
   };
 
   const handleAddQuestion = async (e) => {
@@ -158,7 +122,7 @@ function App() {
       if (editingQuestion) {
         const { error } = await supabase
           .from('questions')
-          .update(newQuestion)
+          .update({ ...newQuestion, updated_at: new Date().toISOString() })
           .eq('id', editingQuestion.id);
 
         if (error) throw error;
@@ -172,21 +136,80 @@ function App() {
         setAdminSuccess('Question added successfully!');
       }
 
-      setNewQuestion({
-        title: '',
-        description: '',
-        difficulty: 'medium',
-        tags: [],
-        solution: '',
-        image_url: '',
-        is_active: false
-      });
-      setEditingQuestion(null);
-      fetchQuestions();
-      fetchCurrentQuestion();
+      await refreshData();
+      resetQuestionForm();
     } catch (error) {
-      setAdminError(error.message);
+      console.error('Error saving question:', error);
+      setAdminError(error.message || 'Failed to save question');
     }
+  };
+
+  const toggleActiveStatus = async (questionId, currentStatus) => {
+    try {
+      setAdminError(null);
+      setAdminSuccess(null);
+      
+      if (!currentStatus) {
+        await supabase
+          .from('questions')
+          .update({ is_active: false });
+      }
+
+      const { error } = await supabase
+        .from('questions')
+        .update({ is_active: !currentStatus, updated_at: new Date().toISOString() })
+        .eq('id', questionId);
+
+      if (error) throw error;
+      
+      setAdminSuccess(`Question ${!currentStatus ? 'activated' : 'deactivated'} successfully!`);
+      await refreshData();
+    } catch (error) {
+      console.error('Error toggling active status:', error);
+      setAdminError(error.message || 'Failed to update question status');
+    }
+  };
+
+  const refreshData = async () => {
+    try {
+      setIsLoading(true);
+      const { data: activeQuestions, error: activeError } = await supabase
+        .from('questions')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (activeError) throw activeError;
+
+      setCurrentQuestions(activeQuestions || []);
+
+      const { data: allQuestions, error: allError } = await supabase
+        .from('questions')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (allError) throw allError;
+      setQuestions(allQuestions || []);
+    } catch (error) {
+      console.error('Error refreshing data:', error.message);
+      setAdminError('Failed to refresh data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetQuestionForm = () => {
+    setNewQuestion({
+      title: '',
+      description: '',
+      difficulty: 'medium',
+      tags: [],
+      solution: '',
+      image_url: '',
+      reference_link: '',
+      is_active: false
+    });
+    setEditingQuestion(null);
   };
 
   const handleAddTag = () => {
@@ -215,6 +238,7 @@ function App() {
       tags: question.tags,
       solution: question.solution,
       image_url: question.image_url,
+      reference_link: question.reference_link,
       is_active: question.is_active
     });
     setIsAdminPanelOpen(true);
@@ -231,8 +255,7 @@ function App() {
 
       if (error) throw error;
       setAdminSuccess('Question deleted successfully!');
-      fetchQuestions();
-      fetchCurrentQuestion();
+      await refreshData();
     } catch (error) {
       setAdminError(error.message);
     }
@@ -266,6 +289,67 @@ function App() {
     return colors[index];
   };
 
+  const formatSolution = (solution) => {
+    if (!solution) return null;
+    
+    const parts = solution.split(/(```[\s\S]*?```)/g);
+    
+    return parts.map((part, index) => {
+      if (part.startsWith('```') && part.endsWith('```')) {
+        const codeBlock = part.slice(3, -3).trim();
+        let language = 'java';
+        let codeContent = codeBlock;
+
+        const firstLineBreak = codeBlock.indexOf('\n');
+        if (firstLineBreak > 0) {
+          const potentialLang = codeBlock.substring(0, firstLineBreak).trim().toLowerCase();
+          const langMap = {
+            'js': 'javascript',
+            'py': 'python',
+            'java': 'java',
+            'c': 'c',
+            'cpp': 'cpp',
+            'ts': 'typescript'
+          };
+          
+          if (langMap[potentialLang]) {
+            language = langMap[potentialLang];
+            codeContent = codeBlock.substring(firstLineBreak).trim();
+          }
+        }
+
+        return (
+          <div key={`code-${index}`} className="my-4">
+            <SyntaxHighlighter 
+              language={language}
+              style={tomorrow}
+              className="rounded-md text-sm"
+              showLineNumbers={true}
+              wrapLines={true}
+            >
+              {codeContent}
+            </SyntaxHighlighter>
+          </div>
+        );
+      }
+
+      return part.split('\n').map((line, lineIndex) => (
+        <p key={`text-${index}-${lineIndex}`} className="mb-4">
+          {line || <br />}
+        </p>
+      ));
+    });
+  };
+
+  const formatDescription = (description) => {
+    if (!description) return null;
+    return description.split('\n').map((line, index) => (
+      <p key={index} className="mb-4">
+        {line || <br />}
+      </p>
+    ));
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navigation */}
@@ -296,7 +380,7 @@ function App() {
                   onClick={() => setIsLoginModalOpen(true)}
                   className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
-                  Login
+                  Admin Login
                 </button>
               )}
             </div>
@@ -310,72 +394,91 @@ function App() {
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
           </div>
-        ) : currentQuestion ? (
-          <div className="bg-white shadow rounded-lg overflow-hidden">
-            <div className="p-6">
-              <h1 className="text-3xl font-bold text-center mb-6 text-gray-900">Question of the Day</h1>
-              
-              <div className="mb-4">
-                <h2 className="text-2xl font-semibold text-gray-800">{currentQuestion.title}</h2>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getDifficultyColor(currentQuestion.difficulty)}`}>
-                    {currentQuestion.difficulty}
-                  </span>
-                  {currentQuestion.tags.map((tag, index) => (
-                    <span key={index} className={`px-2 py-1 text-xs font-semibold rounded-full ${getTagColor(tag)}`}>
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="prose max-w-none mt-4 text-gray-700">
-                <p className="whitespace-pre-line">{currentQuestion.description}</p>
-              </div>
-              
-              {currentQuestion.image_url && (
-                <div className="mt-6">
-                  <img 
-                    src={currentQuestion.image_url} 
-                    alt="Question illustration" 
-                    className="max-w-full h-auto rounded-lg border border-gray-200"
-                  />
-                </div>
-              )}
-              
-              <div className="mt-8">
-                <button
-                  onClick={toggleAnswer}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  {showAnswer ? 'Hide Answer' : 'Show Answer'}
-                </button>
-                
-                {showAnswer && (
-                  <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Solution</h3>
-                    <div className="prose max-w-none text-gray-700 whitespace-pre-line">
-                      {currentQuestion.solution}
+        ) : currentQuestions.length > 0 ? (
+          <div className="space-y-6">
+            <h1 className="text-3xl font-bold text-center mb-6 text-gray-900">Questions of the Day</h1>
+            {currentQuestions.map((question) => (
+              <div key={question.id} className="bg-white shadow rounded-lg overflow-hidden">
+                <div className="p-6">
+                  <div className="mb-4">
+                    <h2 className="text-2xl font-semibold text-gray-800">{question.title}</h2>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getDifficultyColor(question.difficulty)}`}>
+                        {question.difficulty}
+                      </span>
+                      {question.tags.map((tag, index) => (
+                        <span key={index} className={`px-2 py-1 text-xs font-semibold rounded-full ${getTagColor(tag)}`}>
+                          {tag}
+                        </span>
+                      ))}
                     </div>
                   </div>
-                )}
+                  
+                  <div className="prose max-w-none mt-4 text-gray-700">
+                    {formatDescription(question.description)}
+                  </div>
+                  
+                  {question.image_url && (
+                    <div className="mt-6">
+                      <img 
+                        src={question.image_url} 
+                        alt="Question illustration" 
+                        className="max-w-full h-auto rounded-lg border border-gray-200"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+                  
+                  {question.reference_link && (
+                    <div className="mt-4">
+                      <a 
+                        href={question.reference_link} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-indigo-600 hover:text-indigo-800"
+                      >
+                        Question Link ↗
+                      </a>
+                    </div>
+                  )}
+                  
+                  <div className="mt-8">
+                    <button
+                      onClick={() => toggleAnswer(question.id)}
+                      className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                      {showAnswer[question.id] ? 'Hide Answer' : 'Show Answer'}
+                    </button>
+                    
+                    {showAnswer[question.id] && (
+                      <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-2">Solution</h3>
+                        <div className="prose max-w-none text-gray-700">
+                          {formatSolution(question.solution)}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
+            ))}
           </div>
         ) : (
           <div className="text-center py-12">
-            <h2 className="text-2xl font-semibold text-gray-700">No active question found</h2>
+            <h2 className="text-2xl font-semibold text-gray-700">No active questions found</h2>
             <p className="mt-2 text-gray-500">Check back later or login as admin to add questions.</p>
           </div>
         )}
       </main>
 
-      {/* Login Modal */}
+      {/* Admin Login Modal */}
       {isLoginModalOpen && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium text-gray-900">Sign in to your account</h3>
+              <h3 className="text-lg font-medium text-gray-900">Admin Login</h3>
               <button
                 onClick={() => setIsLoginModalOpen(false)}
                 className="text-gray-400 hover:text-gray-500"
@@ -393,19 +496,18 @@ function App() {
               </div>
             )}
             
-            <form onSubmit={handleSignIn} className="space-y-4">
+            <form onSubmit={handleAdminLogin} className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                  Email address
+                <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+                  Username
                 </label>
                 <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
+                  id="username"
+                  name="username"
+                  type="text"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
@@ -418,7 +520,6 @@ function App() {
                   id="password"
                   name="password"
                   type="password"
-                  autoComplete="current-password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -426,139 +527,15 @@ function App() {
                 />
               </div>
               
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input
-                    id="remember-me"
-                    name="remember-me"
-                    type="checkbox"
-                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                    Remember me
-                  </label>
-                </div>
-                
-                <div className="text-sm">
-                  <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500">
-                    Forgot your password?
-                  </a>
-                </div>
-              </div>
-              
               <div>
                 <button
                   type="submit"
                   className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
-                  Sign in
+                  Login
                 </button>
               </div>
             </form>
-            
-            <div className="mt-4 text-center text-sm">
-              <span className="text-gray-600">Don't have an account? </span>
-              <button
-                onClick={() => {
-                  setIsLoginModalOpen(false);
-                  setIsSignupModalOpen(true);
-                }}
-                className="font-medium text-indigo-600 hover:text-indigo-500"
-              >
-                Sign up
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Signup Modal */}
-      {isSignupModalOpen && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium text-gray-900">Create a new account</h3>
-              <button
-                onClick={() => setIsSignupModalOpen(false)}
-                className="text-gray-400 hover:text-gray-500"
-              >
-                <span className="sr-only">Close</span>
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            
-            {authError && (
-              <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md">
-                {authError}
-              </div>
-            )}
-            
-            {adminSuccess && (
-              <div className="mb-4 p-3 bg-green-50 text-green-700 rounded-md">
-                {adminSuccess}
-              </div>
-            )}
-            
-            <form onSubmit={handleSignUp} className="space-y-4">
-              <div>
-                <label htmlFor="signup-email" className="block text-sm font-medium text-gray-700">
-                  Email address
-                </label>
-                <input
-                  id="signup-email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="signup-password" className="block text-sm font-medium text-gray-700">
-                  Password
-                </label>
-                <input
-                  id="signup-password"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                />
-                <p className="mt-1 text-xs text-gray-500">
-                  Password must be at least 6 characters long.
-                </p>
-              </div>
-              
-              <div>
-                <button
-                  type="submit"
-                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  Sign up
-                </button>
-              </div>
-            </form>
-            
-            <div className="mt-4 text-center text-sm">
-              <span className="text-gray-600">Already have an account? </span>
-              <button
-                onClick={() => {
-                  setIsSignupModalOpen(false);
-                  setIsLoginModalOpen(true);
-                }}
-                className="font-medium text-indigo-600 hover:text-indigo-500"
-              >
-                Sign in
-              </button>
-            </div>
           </div>
         </div>
       )}
@@ -572,16 +549,7 @@ function App() {
               <button
                 onClick={() => {
                   setIsAdminPanelOpen(false);
-                  setEditingQuestion(null);
-                  setNewQuestion({
-                    title: '',
-                    description: '',
-                    difficulty: 'medium',
-                    tags: [],
-                    solution: '',
-                    image_url: '',
-                    is_active: false
-                  });
+                  resetQuestionForm();
                 }}
                 className="text-gray-400 hover:text-gray-500"
               >
@@ -705,7 +673,7 @@ function App() {
                     
                     <div>
                       <label htmlFor="solution" className="block text-sm font-medium text-gray-700">
-                        Solution
+                        Solution (use ``` for code blocks)
                       </label>
                       <textarea
                         id="solution"
@@ -715,6 +683,7 @@ function App() {
                         value={newQuestion.solution}
                         onChange={(e) => setNewQuestion({...newQuestion, solution: e.target.value})}
                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="Write your solution here. Wrap code in ``` for syntax highlighting."
                       />
                     </div>
                     
@@ -729,6 +698,21 @@ function App() {
                         value={newQuestion.image_url}
                         onChange={(e) => setNewQuestion({...newQuestion, image_url: e.target.value})}
                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="reference_link" className="block text-sm font-medium text-gray-700">
+                        Reference Link (optional)
+                      </label>
+                      <input
+                        id="reference_link"
+                        name="reference_link"
+                        type="url"
+                        value={newQuestion.reference_link}
+                        onChange={(e) => setNewQuestion({...newQuestion, reference_link: e.target.value})}
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="https://example.com/reference-material"
                       />
                     </div>
                     
@@ -750,18 +734,7 @@ function App() {
                       {editingQuestion && (
                         <button
                           type="button"
-                          onClick={() => {
-                            setEditingQuestion(null);
-                            setNewQuestion({
-                              title: '',
-                              description: '',
-                              difficulty: 'medium',
-                              tags: [],
-                              solution: '',
-                              image_url: '',
-                              is_active: false
-                            });
-                          }}
+                          onClick={resetQuestionForm}
                           className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                         >
                           Cancel
@@ -815,6 +788,12 @@ function App() {
                                   Edit
                                 </button>
                                 <button
+                                  onClick={() => toggleActiveStatus(question.id, question.is_active)}
+                                  className={`mr-2 bg-white rounded-md ${question.is_active ? 'text-red-600 hover:text-red-900 focus:ring-red-500' : 'text-green-600 hover:text-green-900 focus:ring-green-500'} focus:outline-none focus:ring-2 focus:ring-offset-2`}
+                                >
+                                  {question.is_active ? 'Deactivate' : 'Activate'}
+                                </button>
+                                <button
                                   onClick={() => handleDeleteQuestion(question.id)}
                                   className="bg-white rounded-md text-red-600 hover:text-red-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                                 >
@@ -842,7 +821,10 @@ function App() {
                                   <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                                 </svg>
                                 <p>
-                                  Created on <time dateTime={question.created_at}>{new Date(question.created_at).toLocaleDateString()}</time>
+                                  Created: {new Date(question.created_at).toLocaleString()}
+                                  {question.updated_at !== question.created_at && (
+                                    <span> | Updated: {new Date(question.updated_at).toLocaleString()}</span>
+                                  )}
                                 </p>
                               </div>
                             </div>
