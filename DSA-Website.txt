@@ -5,3 +5,5 @@ it could be a little tricky at first but surely possible, soo lets see how it go
 
 and yeah also i forgot to mention the tech-stack 
  for now React-Vite-Supabase/FireBase-Vercel seems to be enough, will try to intigrate cloud in future.
+
+ Sorry guys cant work today :( , feeling really sick !!
