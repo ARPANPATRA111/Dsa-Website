@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 import './App.css';
-// import { PrismAsync as SyntaxHighlighter } from 'react-syntax-highlighter';
-// import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import CodeHighlight from './CodeHighlight';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -173,7 +171,7 @@ function App() {
         setAdminSuccess('Question updated successfully!');
         setTimeout(() => {
           setAdminSuccess(null);
-        }, 3000); // 3000 milliseconds = 3 seconds
+        }, 3000); 
         questionId = editingQuestion.id;
       } else {
         // Insert new question
@@ -186,7 +184,7 @@ function App() {
         setAdminSuccess('Question added successfully!');
         setTimeout(() => {
           setAdminSuccess(null);
-        }, 3000); // 3000 milliseconds = 3 seconds
+        }, 3000); 
         questionId = data[0].id;
       }
 
@@ -222,7 +220,7 @@ function App() {
       setAdminSuccess('Solution added successfully!');
       setTimeout(() => {
         setAdminSuccess(null);
-      }, 3000); // 3000 milliseconds = 3 seconds
+      }, 3000); 
       setNewSolution({ language: 'JavaScript', code: '' });
       await refreshData();
     } catch (error) {
@@ -344,7 +342,7 @@ function App() {
 
     setTimeout(() => {
       setAdminSuccess(null);
-    }, 3000); // 3000 milliseconds = 3 seconds
+    }, 3000); 
       await refreshData();
     } catch (error) {
       setAdminError(error.message);
@@ -364,7 +362,7 @@ function App() {
       setAdminSuccess('Solution deleted successfully!');
       setTimeout(() => {
         setAdminSuccess(null);
-      }, 3000); // 3000 milliseconds = 3 seconds
+      }, 3000); 
       
       // Update solutions state
       setQuestionSolutions(prev => {
