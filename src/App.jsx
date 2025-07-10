@@ -171,6 +171,9 @@ function App() {
 
         if (error) throw error;
         setAdminSuccess('Question updated successfully!');
+        setTimeout(() => {
+          setAdminSuccess(null);
+        }, 3000); // 3000 milliseconds = 3 seconds
         questionId = editingQuestion.id;
       } else {
         // Insert new question
@@ -181,6 +184,9 @@ function App() {
 
         if (error) throw error;
         setAdminSuccess('Question added successfully!');
+        setTimeout(() => {
+          setAdminSuccess(null);
+        }, 3000); // 3000 milliseconds = 3 seconds
         questionId = data[0].id;
       }
 
@@ -214,6 +220,9 @@ function App() {
 
       if (error) throw error;
       setAdminSuccess('Solution added successfully!');
+      setTimeout(() => {
+        setAdminSuccess(null);
+      }, 3000); // 3000 milliseconds = 3 seconds
       setNewSolution({ language: 'JavaScript', code: '' });
       await refreshData();
     } catch (error) {
@@ -331,7 +340,11 @@ function App() {
         .eq('id', id);
 
       if (error) throw error;
-      setAdminSuccess('Question deleted successfully!');
+    setAdminSuccess('Question deleted successfully!');
+
+    setTimeout(() => {
+      setAdminSuccess(null);
+    }, 3000); // 3000 milliseconds = 3 seconds
       await refreshData();
     } catch (error) {
       setAdminError(error.message);
@@ -349,6 +362,9 @@ function App() {
 
       if (error) throw error;
       setAdminSuccess('Solution deleted successfully!');
+      setTimeout(() => {
+        setAdminSuccess(null);
+      }, 3000); // 3000 milliseconds = 3 seconds
       
       // Update solutions state
       setQuestionSolutions(prev => {
