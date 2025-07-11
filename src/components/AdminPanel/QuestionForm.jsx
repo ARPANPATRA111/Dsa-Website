@@ -99,8 +99,16 @@ const QuestionForm = ({
           language: newSolution.language,
           code: newSolution.code
         }]);
-
-      if (error) throw error;
+        
+      if (error) {
+        if (error.code == 23505 || error.message?.includes('duplicate')) {
+          setAdminError('Same languages Duplicate solution being added');
+          setTimeout(() => {
+            setAdminError(null);
+          },5000)
+        }
+        throw error;
+      }
       setAdminSuccess('Solution added successfully!');
       setTimeout(() => {
         setAdminSuccess(null);
@@ -109,7 +117,6 @@ const QuestionForm = ({
       await refreshData();
     } catch (error) {
       console.error('Error adding solution:', error);
-      setAdminError(error.message || 'Failed to add solution');
     }
   };
 

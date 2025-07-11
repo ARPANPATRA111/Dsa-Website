@@ -72,6 +72,7 @@ const AdminPanel = ({
               refreshData={refreshData}
               setAdminError={setAdminError}
               setAdminSuccess={setAdminSuccess}
+              session={session}
             />
           </div>
         </div>

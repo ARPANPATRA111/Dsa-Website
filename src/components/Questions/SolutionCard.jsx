@@ -1,14 +1,14 @@
 // src/components/Questions/SolutionCard.jsx
 import { formatCode } from '../../utils/helpers';
 
-const SolutionCard = ({ solution, questionId, session }) => {
+const SolutionCard = ({ solution, questionId, onDeleteSolution }) => {
   return (
     <div className="p-3 md:p-4 bg-gray-50 rounded-lg border border-gray-200">
       <div className="flex justify-between items-center mb-2">
         <h4 className="text-md font-medium text-gray-700">{solution.language}</h4>
-        {session && (
+        {onDeleteSolution && (
           <button
-            onClick={() => handleDeleteSolution(solution.id, questionId)}
+            onClick={() => onDeleteSolution(solution.id, questionId)}
             className="text-red-500 hover:text-red-700 text-sm"
           >
             Delete

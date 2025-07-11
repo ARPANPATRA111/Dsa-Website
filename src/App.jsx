@@ -14,6 +14,8 @@ function App() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [adminError, setAdminError] = useState(null);
+  const [adminSuccess, setAdminSuccess] = useState(null);
 
   const {
     questions,
@@ -69,6 +71,9 @@ function App() {
           setSelectedCategory={setSelectedCategory}
           setShowCategoryMenu={setShowCategoryMenu}
           session={session}
+          setAdminError={setAdminError}
+          setAdminSuccess={setAdminSuccess}
+          refreshData={refreshData}
         />
       </main>
 
@@ -89,6 +94,8 @@ function App() {
         setSearchTerm={setSearchTerm}
         refreshData={refreshData}
         session={session}
+        setAdminError={setAdminError}
+        setAdminSuccess={setAdminSuccess}
       />
     </div>
   );

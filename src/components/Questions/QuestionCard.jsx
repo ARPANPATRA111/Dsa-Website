@@ -1,24 +1,30 @@
-// src/components/Questions/QuestionCard.jsx
 import SolutionCard from './SolutionCard';
 import { formatDescription } from '../../utils/helpers';
 
 const QuestionCard = ({
-  question,
-  showAnswer,
-  toggleAnswer,
-  questionSolutions,
-  getDifficultyColor,
-  getCategoryName,
-  session
+  question = {},
+  showAnswer = false,
+  toggleAnswer = () => {},
+  questionSolutions = [],
+  getDifficultyColor = () => '',
+  getCategoryName = () => '',
+  session,
+  onDeleteSolution
 }) => {
+  if (!question?.id) return null;
+
   return (
     <div className="bg-white shadow rounded-lg overflow-hidden">
       <div className="p-4 md:p-6">
         <div className="mb-3 md:mb-4">
-          <h2 className="text-xl md:text-2xl font-semibold text-gray-800">{question.title}</h2>
+          <h2 className="text-xl md:text-2xl font-semibold text-gray-800">
+            {question.title || 'Untitled Question'}
+          </h2>
           <div className="flex flex-wrap gap-2 mt-2">
-            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getDifficultyColor(question.difficulty)}`}>
-              {question.difficulty}
+            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+              getDifficultyColor(question.difficulty)
+            }`}>
+              {question.difficulty || 'Unknown'}
             </span>
             <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
               {getCategoryName(question.category_id)}
@@ -51,16 +57,18 @@ const QuestionCard = ({
             {showAnswer ? 'Hide Solutions' : 'Show Solutions'}
           </button>
 
-          {showAnswer && questionSolutions && (
+          {showAnswer && questionSolutions?.length > 0 && (
             <div className="mt-4 md:mt-6 space-y-4">
               <h3 className="text-lg font-semibold text-gray-800 mb-2">Solutions</h3>
               {questionSolutions.map((solution, index) => (
-                <SolutionCard 
-                  key={index}
-                  solution={solution}
-                  questionId={question.id}
-                  session={session}
-                />
+                solution && (
+                  <SolutionCard 
+                    key={index}
+                    solution={solution}
+                    questionId={question.id}
+                    onDeleteSolution={session ? onDeleteSolution : null}
+                  />
+                )
               ))}
             </div>
           )}
