@@ -76,14 +76,14 @@ const QuestionList = ({
   };
 
   return (
-    <div className="lg:col-span-2">
-      <div className="mb-3 md:mb-4">
+    <div className="lg:col-span-2 w-full">
+      <div className="mb-2 sm:mb-3 md:mb-4">
         <input
           type="text"
           placeholder="Search questions..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+          className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-2 sm:px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
         />
       </div>
 
@@ -92,7 +92,7 @@ const QuestionList = ({
           {questions.length > 0 ? (
             questions.map((question) => (
               <li key={question.id}>
-                <div className="px-3 py-3 sm:px-4 sm:py-4">
+                <div className="px-2 py-2 sm:px-3 sm:py-3 md:px-4 md:py-4">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center mb-2 sm:mb-0">
                       <p className="text-sm font-medium text-indigo-600 truncate">

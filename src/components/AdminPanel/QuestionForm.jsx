@@ -136,13 +136,13 @@ const QuestionForm = ({
   };
 
   return (
-    <div className="lg:col-span-1">
-      <div className="bg-gray-50 p-3 md:p-4 rounded-lg border border-gray-200">
-        <h4 className="text-md font-medium text-gray-900 mb-3 md:mb-4">
+    <div className="lg:col-span-1 w-full">
+      <div className="bg-gray-50 p-2 sm:p-3 md:p-4 rounded-lg border border-gray-200">
+        <h4 className="text-md font-medium text-gray-900 mb-2 sm:mb-3 md:mb-4">
           {editingQuestion ? 'Edit Question' : 'Add New Question'}
         </h4>
 
-        <form onSubmit={handleAddQuestion} className="space-y-3 md:space-y-4">
+        <form onSubmit={handleAddQuestion} className="space-y-2 sm:space-y-3 md:space-y-4">
           <div>
             <label htmlFor="category_id" className="block text-sm font-medium text-gray-700">
               Category
@@ -153,7 +153,7 @@ const QuestionForm = ({
               required
               value={newQuestion.category_id}
               onChange={(e) => setNewQuestion({ ...newQuestion, category_id: e.target.value })}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-2 sm:px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
             >
               <option value="">Select a category</option>
               {categories.map(category => (
@@ -173,7 +173,7 @@ const QuestionForm = ({
               required
               value={newQuestion.title}
               onChange={(e) => setNewQuestion({ ...newQuestion, title: e.target.value })}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-2 sm:px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
             />
           </div>
 
@@ -188,7 +188,7 @@ const QuestionForm = ({
               required
               value={newQuestion.description}
               onChange={(e) => setNewQuestion({ ...newQuestion, description: e.target.value })}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-2 sm:px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
             />
           </div>
 
@@ -202,7 +202,7 @@ const QuestionForm = ({
               required
               value={newQuestion.difficulty}
               onChange={(e) => setNewQuestion({ ...newQuestion, difficulty: e.target.value })}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-2 sm:px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
             >
               <option value="Easy">Easy</option>
               <option value="Medium">Medium</option>
@@ -220,7 +220,7 @@ const QuestionForm = ({
               type="url"
               value={newQuestion.image_url}
               onChange={(e) => setNewQuestion({ ...newQuestion, image_url: e.target.value })}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-2 sm:px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
             />
           </div>
 
@@ -229,7 +229,7 @@ const QuestionForm = ({
             setNewSolution={setNewSolution}
           />
 
-          <div className="flex justify-end space-x-2 md:space-x-3">
+          <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 md:space-x-3">
             {editingQuestion && (
               <button
                 type="button"

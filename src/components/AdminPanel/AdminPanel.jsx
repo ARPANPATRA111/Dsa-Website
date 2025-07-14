@@ -23,8 +23,8 @@ const AdminPanel = ({
   return (
     <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50 overflow-y-auto p-2">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-screen overflow-y-auto">
-        <div className="p-4 md:p-6">
-          <div className="flex justify-between items-center mb-4 md:mb-6">
+        <div className="p-2 sm:p-4 md:p-6">
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-4 md:mb-6 gap-2">
             <h3 className="text-lg font-medium text-gray-900">Admin Panel</h3>
             <button
               onClick={() => {
@@ -52,7 +52,7 @@ const AdminPanel = ({
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 sm:gap-4 md:gap-6">
             <QuestionForm 
               categories={categories}
               editingQuestion={editingQuestion}
