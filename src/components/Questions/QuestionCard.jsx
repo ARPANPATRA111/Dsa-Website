@@ -15,9 +15,9 @@ const QuestionCard = ({
 
   return (
     <div className="bg-white shadow rounded-lg overflow-hidden">
-      <div className="p-4 md:p-6">
-        <div className="mb-3 md:mb-4">
-          <h2 className="text-xl md:text-2xl font-semibold text-gray-800">
+      <div className="p-3 sm:p-4 md:p-6">
+        <div className="mb-2 sm:mb-3 md:mb-4">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-800 break-words">
             {question.title || 'Untitled Question'}
           </h2>
           <div className="flex flex-wrap gap-2 mt-2">
@@ -32,16 +32,17 @@ const QuestionCard = ({
           </div>
         </div>
 
-        <div className="prose max-w-none mt-3 md:mt-4 text-gray-700 text-sm md:text-base">
+        <div className="prose max-w-none mt-2 sm:mt-3 md:mt-4 text-gray-700 text-xs sm:text-sm md:text-base break-words">
           {formatDescription(question.description)}
         </div>
 
         {question.image_url && (
-          <div className="mt-4 md:mt-6">
+          <div className="mt-3 sm:mt-4 md:mt-6 flex justify-center">
             <img
               src={question.image_url}
               alt="Question illustration"
-              className="max-w-full h-auto rounded-lg border border-gray-200"
+              className="max-w-full h-auto rounded-lg border border-gray-200 object-contain"
+              style={{ maxHeight: '250px', width: '100%' }}
               onError={(e) => {
                 e.target.style.display = 'none';
               }}
@@ -49,17 +50,17 @@ const QuestionCard = ({
           </div>
         )}
 
-        <div className="mt-6 md:mt-8">
+        <div className="mt-4 sm:mt-6 md:mt-8">
           <button
             onClick={() => toggleAnswer(question.id)}
-            className="w-full md:w-auto px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none"
+            className="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none transition"
           >
             {showAnswer ? 'Hide Solutions' : 'Show Solutions'}
           </button>
 
           {showAnswer && questionSolutions?.length > 0 && (
-            <div className="mt-4 md:mt-6 space-y-4">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">Solutions</h3>
+            <div className="mt-3 sm:mt-4 md:mt-6 space-y-3 sm:space-y-4">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2">Solutions</h3>
               {questionSolutions.map((solution, index) => (
                 solution && (
                   <SolutionCard 
