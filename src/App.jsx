@@ -1,6 +1,5 @@
 // src/App.jsx
-import { useState, useEffect } from 'react';
-import { supabase } from './config/supabase';
+import { useState } from 'react';
 import { ADMIN_CREDENTIALS } from './utils/auth';
 import Header from './components/UI/Header';
 import MobileMenu from './components/UI/MobileMenu';
@@ -44,15 +43,6 @@ function App() {
     setDarkMode(!darkMode);
   };
 
-  // Apply dark mode class to body
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [darkMode]);
-
   // For non-logged in users, show only question of the day
   const displayQuestions = session ? filteredQuestions : 
     questionOfTheDay ? [questionOfTheDay] : [];
@@ -83,7 +73,7 @@ function App() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
         {!session && questionOfTheDay && (
-          <h1 className="text-4xl font-bold mb-6 dark:text-gray-700">
+          <h1 className={`text-4xl font-bold mb-6 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
             Question of the Day
           </h1>
         )}

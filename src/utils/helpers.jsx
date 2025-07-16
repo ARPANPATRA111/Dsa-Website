@@ -26,7 +26,7 @@ export const formatCode = (code, language, darkMode = false) => {
 export const formatDescription = (description, darkMode = false) => {
   if (!description) return null;
   return description.split('\n').map((line, index) => (
-    <p key={index} className={`mb-4 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+    <p key={index} className={`${darkMode ? 'text-gray-100' : 'text-gray-700'} mb-4`}>
       {line || <br />}
     </p>
   ));

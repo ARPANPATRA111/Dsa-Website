@@ -84,7 +84,7 @@ const QuestionList = ({
     <>
       {session && (
         <div className={`flex flex-col md:flex-row md:items-center md:justify-between mb-4 md:mb-6 gap-3 md:gap-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Questions</h1>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Questionssss</h1>
           
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             <CategoryFilter 

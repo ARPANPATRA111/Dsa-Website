@@ -33,8 +33,8 @@ const QuestionCard = ({
           </div>
         </div>
 
-        <div className={`mt-2 sm:mt-3 md:mt-4 ${darkMode ? 'text-gray-300' : 'text-gray-700'} text-xs sm:text-sm md:text-base break-words space-y-2`}>
-          {formatDescription(question.description)}
+        <div className={`mt-2 sm:mt-3 md:mt-4 text-xs sm:text-sm md:text-base break-words space-y-2`}>
+          {formatDescription(question.description, darkMode)}
         </div>
 
         {question.image_url && (
