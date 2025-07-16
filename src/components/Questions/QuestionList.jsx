@@ -19,7 +19,8 @@ const QuestionList = ({
   session,
   setAdminError,
   setAdminSuccess,
-  refreshData
+  refreshData,
+  darkMode
 }) => {
   const [showAnswer, setShowAnswer] = useState({});
 
@@ -76,31 +77,35 @@ const QuestionList = ({
   };
 
   if (isLoading) {
-    return <Loader />;
+    return <Loader darkMode={darkMode} />;
   }
 
   return (
     <>
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 md:mb-6 gap-3 md:gap-4">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Questions</h1>
-        
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-          <CategoryFilter 
-            categories={categories}
-            selectedCategory={selectedCategory}
-            showCategoryMenu={showCategoryMenu}
-            toggleCategoryMenu={toggleCategoryMenu}
-            selectCategory={selectCategory}
-            clearCategoryFilter={clearCategoryFilter}
-            getCategoryName={getCategoryName}
-          />
+      {session && (
+        <div className={`flex flex-col md:flex-row md:items-center md:justify-between mb-4 md:mb-6 gap-3 md:gap-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Questions</h1>
           
-          <SearchBar 
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-          />
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+            <CategoryFilter 
+              categories={categories}
+              selectedCategory={selectedCategory}
+              showCategoryMenu={showCategoryMenu}
+              toggleCategoryMenu={toggleCategoryMenu}
+              selectCategory={selectCategory}
+              clearCategoryFilter={clearCategoryFilter}
+              getCategoryName={getCategoryName}
+              darkMode={darkMode}
+            />
+            
+            <SearchBar 
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              darkMode={darkMode}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {questions?.length > 0 ? (
         <div className="space-y-3 sm:space-y-4 md:space-y-6">
@@ -116,14 +121,17 @@ const QuestionList = ({
                 getCategoryName={getCategoryName}
                 session={session}
                 onDeleteSolution={handleDeleteSolution}
+                darkMode={darkMode}
               />
             )
           ))}
         </div>
       ) : (
-        <div className="text-center py-6 sm:py-8 md:py-12">
-          <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-700">No questions found</h2>
-          <p className="mt-2 text-gray-500 text-sm sm:text-base">
+        <div className={`text-center py-6 sm:py-8 md:py-12 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+          <h2 className="text-lg sm:text-xl md:text-2xl font-semibold">
+            No questions found
+          </h2>
+          <p className="mt-2 text-sm sm:text-base">
             {selectedCategory 
               ? `No questions in ${getCategoryName(selectedCategory)} category`
               : 'Try adjusting your search or filter'}

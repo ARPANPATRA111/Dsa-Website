@@ -1,5 +1,5 @@
 // src/App.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from './config/supabase';
 import { ADMIN_CREDENTIALS } from './utils/auth';
 import Header from './components/UI/Header';
@@ -16,6 +16,7 @@ function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [adminError, setAdminError] = useState(null);
   const [adminSuccess, setAdminSuccess] = useState(null);
+  const [darkMode, setDarkMode] = useState(false);
 
   const {
     questions,
@@ -29,7 +30,8 @@ function App() {
     setSearchTerm,
     setSelectedCategory,
     setShowCategoryMenu,
-    refreshData
+    refreshData,
+    questionOfTheDay
   } = useQuestions(session);
 
   const handleSignOut = () => {
@@ -38,8 +40,25 @@ function App() {
     setIsMobileMenuOpen(false);
   };
 
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+  };
+
+  // Apply dark mode class to body
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
+
+  // For non-logged in users, show only question of the day
+  const displayQuestions = session ? filteredQuestions : 
+    questionOfTheDay ? [questionOfTheDay] : [];
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
       <Header 
         session={session}
         setIsLoginModalOpen={setIsLoginModalOpen}
@@ -47,6 +66,8 @@ function App() {
         handleSignOut={handleSignOut}
         setIsMobileMenuOpen={setIsMobileMenuOpen}
         isMobileMenuOpen={isMobileMenuOpen}
+        darkMode={darkMode}
+        toggleDarkMode={toggleDarkMode}
       />
 
       <MobileMenu 
@@ -56,12 +77,19 @@ function App() {
         setIsAdminPanelOpen={setIsAdminPanelOpen}
         handleSignOut={handleSignOut}
         setIsMobileMenuOpen={setIsMobileMenuOpen}
+        darkMode={darkMode}
+        toggleDarkMode={toggleDarkMode}
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+        {!session && questionOfTheDay && (
+          <h1 className="text-4xl font-bold mb-6 dark:text-gray-700">
+            Question of the Day
+          </h1>
+        )}
         <QuestionList 
           isLoading={isLoading}
-          questions={filteredQuestions}
+          questions={displayQuestions}
           categories={categories}
           questionSolutions={questionSolutions}
           searchTerm={searchTerm}
@@ -74,6 +102,7 @@ function App() {
           setAdminError={setAdminError}
           setAdminSuccess={setAdminSuccess}
           refreshData={refreshData}
+          darkMode={darkMode}
         />
       </main>
 
@@ -82,6 +111,7 @@ function App() {
         setIsOpen={setIsLoginModalOpen}
         setSession={setSession}
         adminCredentials={ADMIN_CREDENTIALS}
+        darkMode={darkMode}
       />
 
       <AdminPanel 
@@ -96,6 +126,7 @@ function App() {
         session={session}
         setAdminError={setAdminError}
         setAdminSuccess={setAdminSuccess}
+        darkMode={darkMode}
       />
     </div>
   );

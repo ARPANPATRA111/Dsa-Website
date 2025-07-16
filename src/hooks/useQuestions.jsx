@@ -11,6 +11,7 @@ const useQuestions = (session) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [showCategoryMenu, setShowCategoryMenu] = useState(false);
+  const [questionOfTheDay, setQuestionOfTheDay] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -26,37 +27,61 @@ const useQuestions = (session) => {
         if (categoriesError) throw categoriesError;
         setCategories(categoriesData || []);
 
-        // Fetch all questions
-        const { data: questionsData, error: questionsError } = await supabase
-          .from('dsa_questions')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (questionsError) throw questionsError;
-        setQuestions(questionsData || []);
-        setFilteredQuestions(questionsData || []);
-
-        // Fetch solutions for all questions
-        if (questionsData && questionsData.length > 0) {
-          const questionIds = questionsData.map(q => q.id);
-          const { data: solutions, error: solutionsError } = await supabase
-            .from('dsa_code_solutions')
+        // Fetch question of the day for non-logged in users
+        if (!session) {
+          const today = new Date().toISOString().split('T')[0];
+          const { data: qotdData, error: qotdError } = await supabase
+            .from('dsa_questions')
             .select('*')
-            .in('question_id', questionIds);
+            .eq('scheduled_date', today)
+            .single();
 
-          if (solutionsError) throw solutionsError;
+          if (!qotdError && qotdData) {
+            setQuestionOfTheDay(qotdData);
+            
+            // Fetch solution for question of the day
+            const { data: solutionData, error: solutionError } = await supabase
+              .from('dsa_code_solutions')
+              .select('*')
+              .eq('question_id', qotdData.id);
 
-          // Map solutions to questions
-          const solutionsMap = {};
-          solutions.forEach(solution => {
-            if (!solutionsMap[solution.question_id]) {
-              solutionsMap[solution.question_id] = [];
+            if (!solutionError) {
+              setQuestionSolutions({
+                [qotdData.id]: solutionData || []
+              });
             }
-            solutionsMap[solution.question_id].push(solution);
-          });
-          setQuestionSolutions(solutionsMap);
-        }
+          }
+        } else {
+          // For logged in users, fetch all questions
+          const { data: questionsData, error: questionsError } = await supabase
+            .from('dsa_questions')
+            .select('*')
+            .order('created_at', { ascending: false });
 
+          if (questionsError) throw questionsError;
+          setQuestions(questionsData || []);
+          setFilteredQuestions(questionsData || []);
+
+          // Fetch solutions for all questions
+          if (questionsData && questionsData.length > 0) {
+            const questionIds = questionsData.map(q => q.id);
+            const { data: solutions, error: solutionsError } = await supabase
+              .from('dsa_code_solutions')
+              .select('*')
+              .in('question_id', questionIds);
+
+            if (solutionsError) throw solutionsError;
+
+            const solutionsMap = {};
+            solutions.forEach(solution => {
+              if (!solutionsMap[solution.question_id]) {
+                solutionsMap[solution.question_id] = [];
+              }
+              solutionsMap[solution.question_id].push(solution);
+            });
+            setQuestionSolutions(solutionsMap);
+          }
+        }
       } catch (error) {
         console.error('Error fetching data:', error.message);
       } finally {
@@ -143,6 +168,7 @@ const useQuestions = (session) => {
     searchTerm,
     selectedCategory,
     showCategoryMenu,
+    questionOfTheDay,
     setSearchTerm,
     setSelectedCategory,
     setShowCategoryMenu,

@@ -9,15 +9,16 @@ const QuestionCard = ({
   getDifficultyColor = () => '',
   getCategoryName = () => '',
   session,
-  onDeleteSolution
+  onDeleteSolution,
+  darkMode
 }) => {
   if (!question?.id) return null;
 
   return (
-    <div className="bg-white shadow rounded-lg overflow-hidden">
+    <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} shadow rounded-lg overflow-hidden`}>
       <div className="p-3 sm:p-4 md:p-6">
         <div className="mb-2 sm:mb-3 md:mb-4">
-          <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-800 break-words">
+          <h2 className={`text-lg sm:text-xl md:text-2xl font-semibold ${darkMode ? 'text-white' : 'text-gray-800'} break-words`}>
             {question.title || 'Untitled Question'}
           </h2>
           <div className="flex flex-wrap gap-2 mt-2">
@@ -32,7 +33,7 @@ const QuestionCard = ({
           </div>
         </div>
 
-        <div className="prose max-w-none mt-2 sm:mt-3 md:mt-4 text-gray-700 text-xs sm:text-sm md:text-base break-words">
+        <div className={`mt-2 sm:mt-3 md:mt-4 ${darkMode ? 'text-gray-300' : 'text-gray-700'} text-xs sm:text-sm md:text-base break-words space-y-2`}>
           {formatDescription(question.description)}
         </div>
 
@@ -60,7 +61,9 @@ const QuestionCard = ({
 
           {showAnswer && questionSolutions?.length > 0 && (
             <div className="mt-3 sm:mt-4 md:mt-6 space-y-3 sm:space-y-4">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2">Solutions</h3>
+              <h3 className={`text-base sm:text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-800'} mb-2`}>
+                Solutions
+              </h3>
               {questionSolutions.map((solution, index) => (
                 solution && (
                   <SolutionCard 
@@ -68,6 +71,7 @@ const QuestionCard = ({
                     solution={solution}
                     questionId={question.id}
                     onDeleteSolution={session ? onDeleteSolution : null}
+                    darkMode={darkMode}
                   />
                 )
               ))}

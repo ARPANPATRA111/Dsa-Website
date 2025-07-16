@@ -1,3 +1,4 @@
+// src/components/CodeHighlight.jsx
 import React from 'react';
 import { Highlight, themes } from 'prism-react-renderer';
 import Prism from 'prismjs';
@@ -8,8 +9,7 @@ import 'prismjs/components/prism-c';
 import 'prismjs/components/prism-cpp';
 import 'prismjs/components/prism-typescript';
 
-const CodeHighlight = ({ codeString, language = 'javascript', isMobile }) => {
-  // Verify language exists, fallback to javascript
+const CodeHighlight = ({ codeString, language = 'javascript', isMobile, darkMode = false }) => {
   const lang = Prism.languages[language] ? language : 'javascript';
 
   return (
@@ -17,10 +17,9 @@ const CodeHighlight = ({ codeString, language = 'javascript', isMobile }) => {
       prism={Prism}
       code={codeString}
       language={lang}
-      theme={themes.vsDark}
+      theme={darkMode ? themes.vsDark : themes.vsLight}
     >
       {({ className, style, tokens, getLineProps, getTokenProps }) => {
-        // Extract the key from getLineProps and getTokenProps before spreading
         const getLinePropsWithoutKey = (line, i) => {
           const { key, ...rest } = getLineProps({ line, key: i });
           return rest;
