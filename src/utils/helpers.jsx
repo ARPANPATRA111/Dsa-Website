@@ -3,18 +3,19 @@ import CodeHighlight from '../CodeHighlight';
 
 export const formatCode = (code, language, darkMode = false) => {
   if (!code) return null;
-  const isMobile = window.innerWidth <= 668;
 
+  // This structure restores the background color for the code snippets on the main page.
   return (
     <div className="my-3 w-full overflow-hidden">
       <div className="relative">
-        <div className={`w-full rounded-md p-1 ${darkMode ? 'bg-gray-900' : 'bg-gray-800'}`}>
+        <div className={`w-full rounded-md ${darkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
           <div className="overflow-auto max-w-full">
             <CodeHighlight 
               codeString={code} 
               language={language.toLowerCase()}
-              isMobile={isMobile}
               darkMode={darkMode}
+              // Explicitly tell the component to wrap the code for the in-page preview
+              wrap={true}
             />
           </div>
         </div>

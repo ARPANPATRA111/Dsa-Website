@@ -7,6 +7,7 @@ import QuestionList from './components/Questions/QuestionList';
 import LoginModal from './components/Auth/LoginModal';
 import AdminPanel from './components/AdminPanel/AdminPanel';
 import useQuestions from './hooks/useQuestions';
+import CodeSnippetModal from './components/UI/CodeSnippetModal';
 
 function App() {
   const [session, setSession] = useState(null);
@@ -16,6 +17,7 @@ function App() {
   const [adminError, setAdminError] = useState(null);
   const [adminSuccess, setAdminSuccess] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
+  const [modalCode, setModalCode] = useState({ code: '', language: '', isOpen: false });
 
   const {
     questions,
@@ -43,13 +45,21 @@ function App() {
     setDarkMode(!darkMode);
   };
 
+  const openCodeModal = (code, language) => {
+    setModalCode({ code, language, isOpen: true });
+  };
+
+  const closeCodeModal = () => {
+    setModalCode({ code: '', language: '', isOpen: false });
+  };
+
   // For non-logged in users, show only question of the day
-  const displayQuestions = session ? filteredQuestions : 
+  const displayQuestions = session ? filteredQuestions :
     questionOfTheDay ? [questionOfTheDay] : [];
 
   return (
-    <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
-      <Header 
+    <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
+      <Header
         session={session}
         setIsLoginModalOpen={setIsLoginModalOpen}
         setIsAdminPanelOpen={setIsAdminPanelOpen}
@@ -60,7 +70,7 @@ function App() {
         toggleDarkMode={toggleDarkMode}
       />
 
-      <MobileMenu 
+      <MobileMenu
         isMobileMenuOpen={isMobileMenuOpen}
         session={session}
         setIsLoginModalOpen={setIsLoginModalOpen}
@@ -77,7 +87,7 @@ function App() {
             Question of the Day
           </h1>
         )}
-        <QuestionList 
+        <QuestionList
           isLoading={isLoading}
           questions={displayQuestions}
           categories={categories}
@@ -93,10 +103,11 @@ function App() {
           setAdminSuccess={setAdminSuccess}
           refreshData={refreshData}
           darkMode={darkMode}
+          onCodeClick={openCodeModal}
         />
       </main>
 
-      <LoginModal 
+      <LoginModal
         isOpen={isLoginModalOpen}
         setIsOpen={setIsLoginModalOpen}
         setSession={setSession}
@@ -104,7 +115,7 @@ function App() {
         darkMode={darkMode}
       />
 
-      <AdminPanel 
+      <AdminPanel
         isOpen={isAdminPanelOpen}
         setIsOpen={setIsAdminPanelOpen}
         questions={filteredQuestions}
@@ -117,6 +128,13 @@ function App() {
         setAdminError={setAdminError}
         setAdminSuccess={setAdminSuccess}
         darkMode={darkMode}
+      />
+      <CodeSnippetModal
+        code={modalCode.code}
+        language={modalCode.language}
+        darkMode={darkMode}
+        isOpen={modalCode.isOpen}
+        onClose={closeCodeModal}
       />
     </div>
   );

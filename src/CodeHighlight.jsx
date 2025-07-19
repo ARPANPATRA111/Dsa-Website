@@ -9,15 +9,21 @@ import 'prismjs/components/prism-c';
 import 'prismjs/components/prism-cpp';
 import 'prismjs/components/prism-typescript';
 
-const CodeHighlight = ({ codeString, language = 'javascript', isMobile, darkMode = false }) => {
+// The component now accepts `fontSize` and `wrap` to control its behavior.
+const CodeHighlight = ({ codeString, language = 'javascript', darkMode = false, fontSize: propFontSize, wrap = false }) => {
   const lang = Prism.languages[language] ? language : 'javascript';
+  // Reverted to themes.vsLight for better contrast in light mode.
+  const theme = darkMode ? themes.vsDark : themes.vsLight;
+  
+  // Use the passed font size, or a default for the preview.
+  const fontSize = propFontSize ? `${propFontSize}px` : '0.8rem';
 
   return (
     <Highlight
       prism={Prism}
       code={codeString}
       language={lang}
-      theme={darkMode ? themes.vsDark : themes.vsLight}
+      theme={theme}
     >
       {({ className, style, tokens, getLineProps, getTokenProps }) => {
         const getLinePropsWithoutKey = (line, i) => {
@@ -35,24 +41,24 @@ const CodeHighlight = ({ codeString, language = 'javascript', isMobile, darkMode
             className={className} 
             style={{
               ...style,
-              padding: isMobile ? '0.5rem' : '1rem',
-              fontSize: isMobile ? '0.6rem' : '0.875rem',
-              borderRadius: '0.25rem',
-              overflow: 'hidden',
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-word',
-              margin: 0
+              padding: '1rem',
+              margin: 0,
+              fontSize: fontSize, // Apply the dynamic font size
+              // Conditional styles based on the 'wrap' prop
+              whiteSpace: wrap ? 'pre-wrap' : 'pre',
+              wordBreak: wrap ? 'break-word' : 'normal',
+              // The parent div in the modal will handle scrolling
+              overflow: 'visible', 
+              backgroundColor: 'transparent',
             }}
           >
             {tokens.map((line, i) => (
               <div 
                 key={i} 
                 {...getLinePropsWithoutKey(line, i)}
-                style={{
-                  whiteSpace: 'pre-wrap',
-                  wordBreak: 'break-word'
-                }}
               >
+                {/* Conditionally show line numbers only when not wrapping (i.e., in the modal) */}
+                {!wrap && <span style={{ display: 'inline-block', width: '2em', userSelect: 'none', opacity: 0.5 }}>{i + 1}</span>}
                 {line.map((token, key) => (
                   <span key={key} {...getTokenPropsWithoutKey(token, key)} />
                 ))}

@@ -1,20 +1,20 @@
 // src/components/UI/Header.jsx
-const Header = ({ 
-  session, 
-  setIsLoginModalOpen, 
-  setIsAdminPanelOpen, 
-  handleSignOut, 
+const Header = ({
+  session,
+  setIsLoginModalOpen,
+  setIsAdminPanelOpen,
+  handleSignOut,
   setIsMobileMenuOpen,
   isMobileMenuOpen,
   darkMode,
   toggleDarkMode
 }) => {
   return (
-    <nav className={`${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm`}>
+    <nav className={`${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm transition-colors duration-300`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           <div className="flex items-center">
-            <span className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+            <span className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} transition-colors duration-300`}>
               DSA Questions
             </span>
           </div>
@@ -22,7 +22,7 @@ const Header = ({
           <div className="hidden md:flex items-center space-x-4">
             <button
               onClick={toggleDarkMode}
-              className={`p-2 rounded-md ${darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900'}`}
+              className={`p-2 rounded-full transition-all duration-300 ${darkMode ? 'text-gray-300 hover:text-white hover:bg-gray-700' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'}`}
             >
               {darkMode ? (
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -34,18 +34,18 @@ const Header = ({
                 </svg>
               )}
             </button>
-            
+
             {session ? (
               <>
                 <button
                   onClick={() => setIsAdminPanelOpen(true)}
-                  className="px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none"
+                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none transition-all duration-300"
                 >
                   Admin Panel
                 </button>
                 <button
                   onClick={handleSignOut}
-                  className={`px-3 py-1.5 text-sm font-medium ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700'} rounded-md hover:bg-gray-200 focus:outline-none`}
+                  className={`px-4 py-2 text-sm font-medium ${darkMode ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} rounded-md focus:outline-none transition-all duration-300`}
                 >
                   Sign Out
                 </button>
@@ -53,7 +53,7 @@ const Header = ({
             ) : (
               <button
                 onClick={() => setIsLoginModalOpen(true)}
-                className="px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none"
+                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none transition-all duration-300"
               >
                 Admin Login
               </button>
@@ -63,7 +63,7 @@ const Header = ({
           <div className="md:hidden flex items-center">
             <button
               onClick={toggleDarkMode}
-              className={`p-2 mr-2 rounded-md ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}
+              className={`p-2 mr-2 rounded-full transition-all duration-300 ${darkMode ? 'text-gray-300 hover:text-white hover:bg-gray-700' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'}`}
             >
               {darkMode ? (
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -75,10 +75,10 @@ const Header = ({
                 </svg>
               )}
             </button>
-            
+
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className={`inline-flex items-center justify-center p-2 rounded-md ${darkMode ? 'text-gray-400 hover:text-gray-500 hover:bg-gray-700' : 'text-gray-400 hover:text-gray-500 hover:bg-gray-100'}`}
+              className={`inline-flex items-center justify-center p-2 rounded-md transition-all duration-300 ${darkMode ? 'text-gray-400 hover:text-gray-500 hover:bg-gray-700' : 'text-gray-400 hover:text-gray-500 hover:bg-gray-100'}`}
             >
               <span className="sr-only">Open main menu</span>
               <svg
