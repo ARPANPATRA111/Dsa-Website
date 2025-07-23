@@ -11,7 +11,7 @@ const QuestionList = ({
   refreshData,
   setAdminError,
   setAdminSuccess,
-  darkMode
+  darkMode,
 }) => {
   const getCategoryName = (categoryId) => {
     const category = categories.find(c => c.id === categoryId);
