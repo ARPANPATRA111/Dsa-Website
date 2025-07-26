@@ -1,28 +1,27 @@
 // src/components/Auth/LoginModal.jsx
 import { useState } from 'react';
+import { supabase } from '../../config/supabase';
 
 const LoginModal = ({ isOpen, setIsOpen, setSession, adminCredentials }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState(null);
 
-  const handleAdminLogin = async (e) => {
-    e.preventDefault();
-    setAuthError(null);
+const handleAdminLogin = async (e) => {
+  e.preventDefault();
+  setAuthError(null);
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: username, // Use email for login
+    password: password,
+  });
 
-    try {
-      if (username !== adminCredentials.username || password !== adminCredentials.password) {
-        throw new Error('Invalid admin credentials');
-      }
-
-      setSession({ isAdmin: true });
-      setIsOpen(false);
-      setUsername('');
-      setPassword('');
-    } catch (error) {
-      setAuthError(error.message);
-    }
-  };
+  if (error) {
+    setAuthError(error.message);
+  } else {
+    setSession(data.session); // Set the real Supabase session
+    setIsOpen(false);
+  }
+};
 
   if (!isOpen) return null;
 
