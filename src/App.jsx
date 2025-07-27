@@ -1,6 +1,5 @@
 // src/App.jsx
 import { useState } from 'react';
-import { ADMIN_CREDENTIALS } from './utils/auth';
 import Header from './components/UI/Header';
 import MobileMenu from './components/UI/MobileMenu';
 import QuestionList from './components/Questions/QuestionList';
@@ -111,7 +110,6 @@ function App() {
         isOpen={isLoginModalOpen}
         setIsOpen={setIsLoginModalOpen}
         setSession={setSession}
-        adminCredentials={ADMIN_CREDENTIALS}
         darkMode={darkMode}
       />
 
