@@ -1,5 +1,5 @@
 // src/hooks/useQuestions.js
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../config/supabase';
 
 const useQuestions = (session) => {
@@ -13,86 +13,98 @@ const useQuestions = (session) => {
   const [showCategoryMenu, setShowCategoryMenu] = useState(false);
   const [questionOfTheDay, setQuestionOfTheDay] = useState(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
+  const fetchData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from('dsa_categories')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (categoriesError) throw categoriesError;
+      setCategories(categoriesData || []);
+
+      let { data: questionsData, error: questionsError } = await supabase
+        .from('dsa_questions')
+        .select('*')
+        .order('scheduled_date', { ascending: true, nullsLast: true });
+
+      if (questionsError) throw questionsError;
+
+      // --- Rescheduling Logic ---
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Normalize to start of day
+      const pastQuestions = questionsData.filter(q => q.scheduled_date && new Date(q.scheduled_date) < today);
+
+      if (session && pastQuestions.length > 0) {
+        const allDates = new Set(questionsData.map(q => q.scheduled_date).filter(Boolean));
         
-        // Fetch categories
-        const { data: categoriesData, error: categoriesError } = await supabase
-          .from('dsa_categories')
-          .select('*')
-          .order('created_at', { ascending: true });
-
-        if (categoriesError) throw categoriesError;
-        setCategories(categoriesData || []);
-
-        // Fetch question of the day for non-logged in users
-        if (!session) {
-          const today = new Date().toISOString().split('T')[0];
-          const { data: qotdData, error: qotdError } = await supabase
-            .from('dsa_questions')
-            .select('*')
-            .eq('scheduled_date', today)
-            .single();
-
-          if (!qotdError && qotdData) {
-            setQuestionOfTheDay(qotdData);
-            
-            // Fetch solution for question of the day
-            const { data: solutionData, error: solutionError } = await supabase
-              .from('dsa_code_solutions')
-              .select('*')
-              .eq('question_id', qotdData.id);
-
-            if (!solutionError) {
-              setQuestionSolutions({
-                [qotdData.id]: solutionData || []
-              });
-            }
-          }
+        let lastDate;
+        const scheduledQuestions = questionsData.filter(q => q.scheduled_date);
+        if (scheduledQuestions.length > 0) {
+            lastDate = new Date(Math.max(...scheduledQuestions.map(q => new Date(q.scheduled_date))));
         } else {
-          // For logged in users, fetch all questions
-          const { data: questionsData, error: questionsError } = await supabase
-            .from('dsa_questions')
-            .select('*')
-            .order('created_at', { ascending: false });
-
-          if (questionsError) throw questionsError;
-          setQuestions(questionsData || []);
-          setFilteredQuestions(questionsData || []);
-
-          // Fetch solutions for all questions
-          if (questionsData && questionsData.length > 0) {
-            const questionIds = questionsData.map(q => q.id);
-            const { data: solutions, error: solutionsError } = await supabase
-              .from('dsa_code_solutions')
-              .select('*')
-              .in('question_id', questionIds);
-
-            if (solutionsError) throw solutionsError;
-
-            const solutionsMap = {};
-            solutions.forEach(solution => {
-              if (!solutionsMap[solution.question_id]) {
-                solutionsMap[solution.question_id] = [];
-              }
-              solutionsMap[solution.question_id].push(solution);
-            });
-            setQuestionSolutions(solutionsMap);
-          }
+            lastDate = new Date();
+            lastDate.setDate(lastDate.getDate() - 1);
         }
-      } catch (error) {
-        console.error('Error fetching data:', error.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
 
-    fetchData();
+        const updatePromises = pastQuestions.map(question => {
+            let nextDate = new Date(lastDate.setDate(lastDate.getDate() + 1));
+            while (allDates.has(nextDate.toISOString().split('T')[0])) {
+                nextDate.setDate(nextDate.getDate() + 1);
+            }
+            const newScheduledDate = nextDate.toISOString().split('T')[0];
+            allDates.add(newScheduledDate);
+            
+            const questionIndex = questionsData.findIndex(q => q.id === question.id);
+            if (questionIndex !== -1) {
+                questionsData[questionIndex].scheduled_date = newScheduledDate;
+            }
+            
+            return supabase.from('dsa_questions').update({ scheduled_date: newScheduledDate }).eq('id', question.id);
+        });
+
+        await Promise.all(updatePromises);
+        questionsData.sort((a, b) => (a.scheduled_date && b.scheduled_date) ? new Date(a.scheduled_date) - new Date(b.scheduled_date) : a.scheduled_date ? -1 : 1);
+      }
+      // --- End Rescheduling ---
+
+      setQuestions(questionsData);
+      setFilteredQuestions(questionsData);
+      fetchSolutionsAndSetQOTD(questionsData);
+
+    } catch (error) {
+      console.error('Error fetching data:', error.message);
+    } finally {
+      setIsLoading(false);
+    }
   }, [session]);
 
-  // Filter questions based on search term and selected category
+  const fetchSolutionsAndSetQOTD = async (questionsData) => {
+    if (!questionsData || questionsData.length === 0) return;
+
+    const questionIds = questionsData.map(q => q.id);
+    const { data: solutions } = await supabase.from('dsa_code_solutions').select('*').in('question_id', questionIds);
+
+    const solutionsMap = {};
+    if (solutions) {
+      solutions.forEach(solution => {
+        if (!solutionsMap[solution.question_id]) solutionsMap[solution.question_id] = [];
+        solutionsMap[solution.question_id].push(solution);
+      });
+    }
+    setQuestionSolutions(solutionsMap);
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const qotd = questionsData.find(q => q.scheduled_date === todayStr);
+    setQuestionOfTheDay(qotd);
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
   useEffect(() => {
     let filtered = questions;
     
@@ -102,66 +114,15 @@ const useQuestions = (session) => {
     
     if (searchTerm) {
       filtered = filtered.filter(question =>
-        question.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        question.description.toLowerCase().includes(searchTerm.toLowerCase())
+        question.title.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     
     setFilteredQuestions(filtered);
   }, [questions, searchTerm, selectedCategory]);
 
-  const refreshData = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Fetch categories
-      const { data: categoriesData, error: categoriesError } = await supabase
-        .from('dsa_categories')
-        .select('*')
-        .order('created_at', { ascending: true });
-
-      if (categoriesError) throw categoriesError;
-      setCategories(categoriesData || []);
-
-      // Fetch all questions
-      const { data: questionsData, error: questionsError } = await supabase
-        .from('dsa_questions')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (questionsError) throw questionsError;
-      setQuestions(questionsData || []);
-
-      // Fetch solutions for all questions
-      if (questionsData && questionsData.length > 0) {
-        const questionIds = questionsData.map(q => q.id);
-        const { data: solutions, error: solutionsError } = await supabase
-          .from('dsa_code_solutions')
-          .select('*')
-          .in('question_id', questionIds);
-
-        if (solutionsError) throw solutionsError;
-
-        // Map solutions to questions
-        const solutionsMap = {};
-        solutions.forEach(solution => {
-          if (!solutionsMap[solution.question_id]) {
-            solutionsMap[solution.question_id] = [];
-          }
-          solutionsMap[solution.question_id].push(solution);
-        });
-        setQuestionSolutions(solutionsMap);
-      }
-    } catch (error) {
-      console.error('Error refreshing data:', error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return {
-    questions,
-    filteredQuestions,
+    questions: filteredQuestions,
     isLoading,
     categories,
     questionSolutions,
@@ -172,7 +133,7 @@ const useQuestions = (session) => {
     setSearchTerm,
     setSelectedCategory,
     setShowCategoryMenu,
-    refreshData
+    refreshData: fetchData
   };
 };
 

@@ -3,50 +3,43 @@ import { useState } from 'react';
 import QuestionForm from './QuestionForm';
 import QuestionList from './QuestionList';
 
-const AdminPanel = ({ 
-  isOpen, 
-  setIsOpen, 
-  questions, 
-  categories, 
-  questionSolutions, 
-  searchTerm, 
-  setSearchTerm,
+const AdminPanel = ({
+  isOpen,
+  setIsOpen,
+  questions,
+  categories,
   refreshData,
   session,
-  setAdminError,
-  setAdminSuccess,
-  darkMode
+  darkMode,
+  searchTerm,
+  setSearchTerm,
+  setToast,
 }) => {
-  const [adminError, setLocalAdminError] = useState(null);
-  const [adminSuccess, setLocalAdminSuccess] = useState(null);
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState(null);
-  const [scheduledDates, setScheduledDates] = useState([]);
 
-  const handleError = (error) => {
-    setLocalAdminError(error);
-    setAdminError(error);
+  const openFormModal = (question = null) => {
+    setEditingQuestion(question);
+    setIsFormModalOpen(true);
   };
 
-  const handleSuccess = (message) => {
-    setLocalAdminSuccess(message);
-    setAdminSuccess(message);
+  const closeFormModal = () => {
+    setEditingQuestion(null);
+    setIsFormModalOpen(false);
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50 overflow-y-auto p-2 ">
-      <div className={`mt-5 mb-5 rounded-lg shadow-xl w-full max-w-6xl hide-scrollbar max-h-[95vh] overflow-y-auto ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>        
-        <div className="p-2 sm:p-4 md:p-6">
-          <div className="flex flex-col sm:flex-row justify-between items-center mb-4 md:mb-6 gap-2">
-            <h3 className={`text-lg font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+    <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50 overflow-y-auto p-4">
+      <div className={`rounded-lg shadow-xl w-full max-w-6xl max-h-[95vh] overflow-y-auto ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className={`text-xl font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
               Admin Panel
             </h3>
             <button
-              onClick={() => {
-                setIsOpen(false);
-                setEditingQuestion(null);
-              }}
+              onClick={() => setIsOpen(false)}
               className={`${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-500'}`}
             >
               <span className="sr-only">Close</span>
@@ -56,46 +49,44 @@ const AdminPanel = ({
             </button>
           </div>
 
-          {adminError && (
-            <div className={`mb-4 p-3 rounded-md text-sm ${darkMode ? 'bg-red-900 text-red-200' : 'bg-red-50 text-red-700'}`}>
-              {adminError}
-            </div>
-          )}
+          <div className="mb-4">
+            <button
+              onClick={() => openFormModal()}
+              className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 focus:outline-none"
+            >
+              Add New Question
+            </button>
+          </div>
 
-          {adminSuccess && (
-            <div className={`mb-4 p-3 rounded-md text-sm ${darkMode ? 'bg-green-900 text-green-200' : 'bg-green-50 text-green-700'}`}>
-              {adminSuccess}
-            </div>
-          )}
+          <QuestionList
+            questions={questions}
+            categories={categories}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            setEditingQuestion={openFormModal}
+            refreshData={refreshData}
+            session={session}
+            darkMode={darkMode}
+            setToast={setToast}
+          />
+        </div>
+      </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 sm:gap-4 md:gap-6">
-            <QuestionForm 
+      {isFormModalOpen && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className={`rounded-lg shadow-xl w-full max-w-2xl max-h-[95vh] overflow-y-auto ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+            <QuestionForm
               categories={categories}
               editingQuestion={editingQuestion}
               setEditingQuestion={setEditingQuestion}
-              setAdminError={handleError}
-              setAdminSuccess={handleSuccess}
               refreshData={refreshData}
               darkMode={darkMode}
-              scheduledDates={scheduledDates}
-            />
-            
-            <QuestionList 
-              questions={questions}
-              categories={categories}
-              questionSolutions={questionSolutions}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              setEditingQuestion={setEditingQuestion}
-              refreshData={refreshData}
-              setAdminError={handleError}
-              setAdminSuccess={handleSuccess}
-              session={session}
-              darkMode={darkMode}
+              onClose={closeFormModal}
+              setToast={setToast}
             />
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

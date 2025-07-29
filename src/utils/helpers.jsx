@@ -1,10 +1,9 @@
-// src/utils/helpers.js
+// src/utils/helpers.jsx
 import CodeHighlight from '../CodeHighlight';
 
 export const formatCode = (code, language, darkMode = false) => {
   if (!code) return null;
 
-  // This structure restores the background color for the code snippets on the main page.
   return (
     <div className="my-3 w-full overflow-hidden">
       <div className="relative">
@@ -14,7 +13,6 @@ export const formatCode = (code, language, darkMode = false) => {
               codeString={code} 
               language={language.toLowerCase()}
               darkMode={darkMode}
-              // Explicitly tell the component to wrap the code for the in-page preview
               wrap={true}
             />
           </div>
@@ -26,13 +24,14 @@ export const formatCode = (code, language, darkMode = false) => {
 
 export const formatDescription = (description, darkMode = false) => {
   if (!description) return null;
-  return description.split('\n').map((line, index) => (
-    <p key={index} className={`${darkMode ? 'text-gray-100' : 'text-gray-700'} mb-4`}>
-      {line || <br />}
+  return (
+    <p className={`${darkMode ? 'text-gray-100' : 'text-gray-700'} whitespace-pre-line`}>
+      {description}
     </p>
-  ));
+  );
 };
 
 export const formatDate = (dateString) => {
+  if (!dateString) return '';
   return new Date(dateString).toLocaleDateString();
 };
