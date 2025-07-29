@@ -7,20 +7,19 @@ import LoginModal from './components/Auth/LoginModal';
 import AdminPanel from './components/AdminPanel/AdminPanel';
 import useQuestions from './hooks/useQuestions';
 import CodeSnippetModal from './components/UI/CodeSnippetModal';
+import Toast from './components/UI/Toast';
 
 function App() {
   const [session, setSession] = useState(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [adminError, setAdminError] = useState(null);
-  const [adminSuccess, setAdminSuccess] = useState(null);
+  const [toast, setToast] = useState({ message: '', type: '' });
   const [darkMode, setDarkMode] = useState(false);
   const [modalCode, setModalCode] = useState({ code: '', language: '', isOpen: false });
 
   const {
     questions,
-    filteredQuestions,
     isLoading,
     categories,
     questionSolutions,
@@ -52,12 +51,16 @@ function App() {
     setModalCode({ code: '', language: '', isOpen: false });
   };
 
-  // For non-logged in users, show only question of the day
-  const displayQuestions = session ? filteredQuestions :
+  const displayQuestions = session ? questions :
     questionOfTheDay ? [questionOfTheDay] : [];
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
+      <Toast 
+        message={toast.message} 
+        type={toast.type} 
+        onClose={() => setToast({ message: '', type: '' })} 
+      />
       <Header
         session={session}
         setIsLoginModalOpen={setIsLoginModalOpen}
@@ -77,7 +80,6 @@ function App() {
         handleSignOut={handleSignOut}
         setIsMobileMenuOpen={setIsMobileMenuOpen}
         darkMode={darkMode}
-        toggleDarkMode={toggleDarkMode}
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
@@ -98,8 +100,6 @@ function App() {
           setSelectedCategory={setSelectedCategory}
           setShowCategoryMenu={setShowCategoryMenu}
           session={session}
-          setAdminError={setAdminError}
-          setAdminSuccess={setAdminSuccess}
           refreshData={refreshData}
           darkMode={darkMode}
           onCodeClick={openCodeModal}
@@ -116,16 +116,14 @@ function App() {
       <AdminPanel
         isOpen={isAdminPanelOpen}
         setIsOpen={setIsAdminPanelOpen}
-        questions={filteredQuestions}
+        questions={questions}
         categories={categories}
-        questionSolutions={questionSolutions}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
         refreshData={refreshData}
         session={session}
-        setAdminError={setAdminError}
-        setAdminSuccess={setAdminSuccess}
         darkMode={darkMode}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        setToast={setToast}
       />
       <CodeSnippetModal
         code={modalCode.code}
