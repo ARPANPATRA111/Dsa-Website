@@ -6,6 +6,12 @@
 ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
 ![Vercel](https://img.shields.io/badge/vercel-%23000000.svg?style=for-the-badge&logo=vercel&logoColor=white)
 
+
+
+https://github.com/user-attachments/assets/e54fc979-f8c8-4334-871c-d6555326a9cb
+
+
+
 Supercharge your interview prep with this sleek web application designed to help you master Data Structures and Algorithms. This platform is your personal hub for revising and reviewing a curated collection of DSA problems and their optimal solutions.
 
 ## ✨ What's Inside?
